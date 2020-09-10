@@ -1,0 +1,38 @@
+version: '3.6'
+services:
+  consul-template:
+    image: hashicorp/consul-template
+    command: -template="/app/template/.env.ctmpl:/app/config/.env" -vault-renew-token=false
+    network_mode: host
+    environment:
+      - VAULT_ADDR
+      - VAULT_TOKEN
+
+    volumes:
+      - type: volume
+        source: kv_client_config_dir
+        target: /app/config
+      - type: volume
+        source: kv_client_template_dir
+        target: /app/template
+
+  client:
+    build: client/
+    ports:
+      - "30001:80"
+    environment:
+      ENV_FILE: /app/config/.env
+    volumes:
+      - type: volume
+        source: kv_client_config_dir
+        target: /app/config
+      - type: volume
+        source: kv_client_template_dir
+        target: /app/template
+
+  server:
+    build: server/
+
+volumes:
+  kv_client_config_dir:
+  kv_client_template_dir:

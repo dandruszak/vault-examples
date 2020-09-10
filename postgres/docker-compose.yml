@@ -1,0 +1,43 @@
+version: '3.6'
+services:
+  consul-template:
+    image: hashicorp/consul-template
+    command: -template="/app/template/.env.ctmpl:/app/config/.env" -vault-renew-token=false -vault-retry-attempts=0
+    network_mode: host
+    environment:
+      - VAULT_ADDR
+      - VAULT_TOKEN
+
+    volumes:
+      - type: volume
+        source: postgres_client_config_dir
+        target: /app/config
+      - type: volume
+        source: postgres_client_template_dir
+        target: /app/template
+
+  client:
+    build: client/
+    ports:
+      - "30001:80"
+    environment:
+      ENV_FILE: /app/config/.env
+    volumes:
+      - type: volume
+        source: postgres_client_config_dir
+        target: /app/config
+      - type: volume
+        source: postgres_client_template_dir
+        target: /app/template
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    ports:
+      - '5432:5432'
+
+volumes:
+  postgres_client_config_dir:
+  postgres_client_template_dir:

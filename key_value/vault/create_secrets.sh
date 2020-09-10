@@ -1,0 +1,1 @@
+vault kv put secret/api token=secret
